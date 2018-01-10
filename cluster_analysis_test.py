@@ -41,3 +41,59 @@ print(str(len(synopses_wiki)) + ' synopses')
 print(str(len(genres)) + ' genres')
 #print(genres)
 
+synopses_imdb = open('synopses_list_imdb.txt').read().split('\n BREAKS HERE')
+synopses_imdb = synopses_imdb[:100]
+
+synopses_clean_imdb = []
+
+for text in synopses_imdb:
+    text = BeautifulSoup(text, 'html.parser').getText()
+    #strips html formatting and converts to unicode
+    synopses_clean_imdb.append(text)
+
+synopses_imdb = synopses_clean_imdb
+
+
+synopses = []
+
+for i in range(len(synopses_wiki)):
+    item = synopses_wiki[i] + synopses_imdb[i]
+    synopses.append(item)
+
+
+# generates index for each item in the corpora (in this case it's just rank) and I'll use this for scoring later
+ranks = []
+
+for i in range(0,len(titles)):
+    ranks.append(i)
+
+# load nltk's English stopwords as variable called 'stopwords'
+stopwords = nltk.corpus.stopwords.words('english') 
+
+# load nltk's SnowballStemmer as variabled 'stemmer'
+from nltk.stem.snowball import SnowballStemmer
+stemmer = SnowballStemmer("english")
+
+# here I define a tokenizer and stemmer which returns the set of stems in the text that it is passed
+
+def tokenize_and_stem(text):
+    # first tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
+    tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
+    filtered_tokens = []
+    # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
+    for token in tokens:
+        if re.search('[a-zA-Z]', token):
+            filtered_tokens.append(token)
+    stems = [stemmer.stem(t) for t in filtered_tokens]
+    return stems
+
+
+def tokenize_only(text):
+    # first tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
+    tokens = [word.lower() for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
+    filtered_tokens = []
+    # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
+    for token in tokens:
+        if re.search('[a-zA-Z]', token):
+            filtered_tokens.append(token)
+    return filtered_tokens

@@ -96,4 +96,32 @@ def tokenize_only(text):
     for token in tokens:
         if re.search('[a-zA-Z]', token):
             filtered_tokens.append(token)
-    return filtered_tokens
+    return filtered_tokens  
+
+
+totalvocab_stemmed = []
+totalvocab_tokenized = []
+for i in synopses:
+    allwords_stemmed = tokenize_and_stem(i)
+    totalvocab_stemmed.extend(allwords_stemmed)
+    
+    allwords_tokenized = tokenize_only(i)
+    totalvocab_tokenized.extend(allwords_tokenized)
+
+
+vocab_frame = pd.DataFrame({'words': totalvocab_tokenized}, index = totalvocab_stemmed)
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+tfidf_vectorizer = TfidfVectorizer(max_df=0.8, max_features=200000,
+                                 min_df=0.2, stop_words='english',
+                                 use_idf=True, tokenizer=tokenize_and_stem, ngram_range=(1,3))
+
+tfidf_matrix = tfidf_vectorizer.fit_transform(synopses)
+
+print(tfidf_matrix.shape)
+
+terms = tfidf_vectorizer.get_feature_names()
+
+from sklearn.metrics.pairwise import cosine_similarity
+dist = 1 - cosine_similarity(tfidf_matrix)

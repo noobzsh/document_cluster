@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import pandas as pd
 import nltk
@@ -125,3 +126,54 @@ terms = tfidf_vectorizer.get_feature_names()
 
 from sklearn.metrics.pairwise import cosine_similarity
 dist = 1 - cosine_similarity(tfidf_matrix)
+
+
+#..................
+#K-means clustering
+#..................
+
+from sklearn.cluster import KMeans
+
+num_clusters = 5
+
+km = KMeans(n_clusters=num_clusters)
+
+km.fit(tfidf_matrix)
+
+clusters = km.labels_.tolist()
+
+#from sklearn.externals import joblib
+
+#joblib.dump(km,  'doc_cluster.pkl')
+#km = joblib.load('doc_cluster.pkl')
+#clusters = km.labels_.tolist()
+
+
+#import pandas as pd
+
+films = { 'title': titles, 'rank': ranks, 'synopsis': synopses, 'cluster': clusters, 'genre': genres }
+
+frame = pd.DataFrame(films, index = [clusters] , columns = ['rank', 'title', 'cluster', 'genre'])
+
+frame['cluster'].value_counts()
+
+grouped = frame['rank'].groupby(frame['cluster'])
+
+grouped.mean()
+
+
+
+print("Top terms per cluster:")
+print()
+order_centroids = km.cluster_centers_.argsort()[:, ::-1]
+for i in range(num_clusters):
+    print("Cluster %d words:" % i, end='')
+    for ind in order_centroids[i, :6]:
+        print(' %s' % vocab_frame.ix[terms[ind].split(' ')].values.tolist()[0][0].encode('utf-8', 'ignore'), end=',')
+    print()
+    print()
+    print("Cluster %d titles:" % i, end='')
+    for title in frame.ix[i]['title'].values.tolist():
+        print(' %s,' % title, end='')
+    print()
+    print()
